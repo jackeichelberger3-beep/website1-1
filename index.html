@@ -4,71 +4,85 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Architecture Library - Standalone</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#f7f7f9;--card:#fff;--muted:#6b7280;--accent:#0ea5a4;--text:#0f172a;--header:#ffffff;
+      --bg:#f4f6f8;--card:#ffffff;--muted:#6b7280;--accent:#0ea5a4;--accent-600:#089aa0;--text:#0f172a;--header:#ffffff;--glass:rgba(255,255,255,0.6);
+      --radius:12px; --shadow: 0 6px 22px rgba(16,24,40,0.06);
     }
-    [data-theme="dark"]{--bg:#0b1220;--card:#071027;--muted:#9ca3af;--accent:#06b6d4;--text:#e6eef6;--header:#071027}
+    [data-theme="dark"]{--bg:#071021;--card:#071427;--muted:#9aa4b2;--accent:#06b6d4;--accent-600:#05a5bb;--text:#e6eef6;--header:#071427;--glass:rgba(10,16,24,0.6)}
     *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;background:var(--bg);color:var(--text)}
-    header{height:64px;background:var(--header);display:flex;align-items:center;gap:12px;padding:8px 16px;border-bottom:1px solid rgba(0,0,0,0.06)}
-    .logo{font-weight:700;font-size:18px}
-    .search{flex:1;display:flex;align-items:center;gap:8px}
-    .search input{width:100%;padding:8px 12px;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:transparent}
-    .controls{display:flex;gap:8px;align-items:center}
-    .btn{background:var(--accent);color:#fff;padding:8px 10px;border-radius:8px;border:none;cursor:pointer}
-    .btn.ghost{background:transparent;color:var(--text);border:1px solid rgba(0,0,0,0.08)}
-    .container{display:flex;height:calc(100vh - 64px)}
-    nav{width:260px;padding:16px;background:var(--card);border-right:1px solid rgba(0,0,0,0.04);overflow:auto}
-    main{flex:1;padding:20px;overflow:auto}
-    .menu-item{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;margin-bottom:6px;cursor:pointer}
-    .menu-item:hover{background:rgba(0,0,0,0.03)}
-    .menu-item .icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:rgba(0,0,0,0.03)}
-    .submenu{margin-left:24px;border-left:1px dashed rgba(0,0,0,0.04);padding-left:10px;margin-top:6px}
-    .page-card{background:var(--card);padding:18px;border-radius:10px;box-shadow:0 6px 16px rgba(0,0,0,0.04);}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
-    .thumb{background:rgba(0,0,0,0.04);border-radius:8px;overflow:hidden}
-    /* admin modal */
-    .modal{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:none;align-items:center;justify-content:center;padding:20px}
+    html,body{height:100%}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;background:linear-gradient(180deg,var(--bg),#eef2f6 120%);color:var(--text);-webkit-font-smoothing:antialiased}
+
+    header{height:72px;background:var(--header);display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid rgba(15,23,42,0.04);backdrop-filter: blur(6px);}
+    .logo{font-weight:700;font-size:18px;color:var(--accent-600);display:flex;align-items:center;gap:10px}
+    .logo .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#089aa0)}
+    .search{flex:1;display:flex;align-items:center;gap:10px}
+    .search input{width:100%;padding:10px 14px;border-radius:12px;border:1px solid rgba(15,23,42,0.06);background:transparent;box-shadow:var(--shadow);transition:box-shadow .18s ease}
+    .search input:focus{box-shadow:0 10px 30px rgba(16,24,40,0.08);outline:none}
+    .controls{display:flex;gap:10px;align-items:center}
+    .btn{background:var(--accent);color:#fff;padding:8px 12px;border-radius:10px;border:none;cursor:pointer;font-weight:600}
+    .btn.ghost{background:transparent;color:var(--text);border:1px solid rgba(15,23,42,0.06)}
+    .btn.small{padding:6px 8px;font-size:13px}
+
+    .container{display:flex;height:calc(100vh - 72px);gap:18px;padding:18px}
+    nav{width:300px;padding:18px;background:linear-gradient(180deg,var(--card),rgba(255,255,255,0.92));border-radius:var(--radius);box-shadow:var(--shadow);overflow:auto}
+    main{flex:1;padding:6px;overflow:auto}
+
+    .menu-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .menu-item{display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;margin-bottom:8px;cursor:pointer;transition:transform .12s ease,background .12s ease}
+    .menu-item:hover{transform:translateY(-2px);background:rgba(15,23,42,0.03)}
+    .menu-item.active{background:linear-gradient(90deg, rgba(14,165,164,0.08), rgba(8,154,160,0.06));box-shadow:0 6px 18px rgba(8,154,160,0.06)}
+    .menu-item .icon{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(15,23,42,0.03)}
+
+    .submenu{margin-left:14px;padding-left:10px;border-left:1px dashed rgba(15,23,42,0.04);margin-top:6px}
+    .page-card{background:var(--card);padding:20px;border-radius:14px;box-shadow:var(--shadow);}
+
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+    .thumb{background:rgba(15,23,42,0.03);border-radius:10px;overflow:hidden}
+
+    .modal{position:fixed;inset:0;background:rgba(2,6,23,0.5);display:none;align-items:center;justify-content:center;padding:20px;z-index:40}
     .modal.open{display:flex}
-    .panel{background:var(--card);padding:18px;border-radius:10px;max-width:900px;width:100%;max-height:90vh;overflow:auto}
-    .field{margin-bottom:10px}
+    .panel{background:var(--card);padding:18px;border-radius:12px;max-width:1000px;width:100%;max-height:90vh;overflow:auto}
+
     label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-    input[type=text],textarea,select{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:transparent}
+    input[type=text],textarea,select{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(15,23,42,0.05);background:transparent}
     .row{display:flex;gap:10px}
     .col{flex:1}
-    .small{width:120px}
-    .danger{background:#ef4444}
-    .stats{font-size:13px;color:var(--muted)}
-    .drag-handle{cursor:grab;padding:6px}
+
     footer{padding:12px;text-align:center;color:var(--muted)}
+
+    /* Floating reset button */
+    .floating-reset{position:fixed;right:18px;bottom:18px;background:linear-gradient(135deg,var(--accent),var(--accent-600));color:white;padding:12px 14px;border-radius:14px;box-shadow:0 8px 28px rgba(8,154,160,0.16);cursor:pointer;z-index:60;font-weight:700;border:none}
+    .floating-reset small{display:block;font-weight:400;font-size:11px;opacity:0.9}
+
+    @media (max-width:900px){nav{width:84px}.menu-item span{display:none}.container{padding:12px}}
   </style>
 </head>
 <body>
   <header>
-    <div class="logo">Architecture Library</div>
+    <div class="logo"><span class="dot"></span>Architecture Library</div>
     <div class="search"><input id="searchInput" placeholder="Search pages, project names, content..." /></div>
     <div class="controls">
-      <button id="darkToggle" class="btn ghost">Dark</button>
-      <button id="adminBtn" class="btn">Admin</button>
+      <button id="darkToggle" class="btn ghost small">Dark</button>
+      <button id="adminBtn" class="btn small">Admin</button>
     </div>
   </header>
   <div class="container">
     <nav id="sideNav">
-      <!-- Side menu rendered here -->
-      <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
-        <strong>Pages</strong>
-        <button id="exportBtn" class="btn ghost small">Export</button>
-      </div>
+      <div class="menu-header"><strong>Pages</strong><div style="display:flex;gap:8px"><button id="exportBtn" class="btn ghost small">Export</button></div></div>
       <div id="menuList"></div>
-      <hr />
-      <div style="margin-top:10px;font-size:13px;color:var(--muted)">Quick tips: Use Admin to manage pages. Search finds content and titles.</div>
+      <div style="margin-top:14px;font-size:13px;color:var(--muted)">Quick tips: Use Admin to manage pages. Search filters the menu as you type.</div>
     </nav>
     <main>
       <div id="contentArea"></div>
     </main>
   </div>
 
+  <!-- Admin Modal -->
   <div id="adminModal" class="modal" aria-hidden="true">
     <div class="panel">
       <div style="display:flex;justify-content:space-between;align-items:center">
@@ -100,12 +114,12 @@
           <div class="field">
             <label>Import JSON (pages export)</label>
             <textarea id="importJson" rows="6" placeholder='Paste exported JSON here'></textarea>
-            <div style="margin-top:8px"><button id="importBtn" class="btn">Import</button> <button id="resetBtn" class="btn ghost danger">Reset to Demo</button></div>
+            <div style="margin-top:8px"><button id="importBtn" class="btn">Import</button> <button id="resetBtn" class="btn ghost small">Reset to Demo</button></div>
           </div>
         </section>
 
         <section style="margin-top:12px;font-size:13px;color:var(--muted)">
-          Admin password is set in the top of this file. Change it there before sharing. Admin actions are saved in the browser's localStorage — to make permanent edits in your repository, edit index.html directly and add pages to the "PAGES_DATA" variable (see instructions below).
+          Admin password is set in the top of this file. Change it there before sharing. Admin actions are saved in the browser's localStorage — to make permanent edits in your repository, edit index.html directly and add pages to the "PAGES_DATA" variable.
         </section>
 
       </div>
@@ -113,7 +127,7 @@
     </div>
   </div>
 
-  <!-- Page Editor Modal -->
+  <!-- Editor Modal -->
   <div id="editorModal" class="modal">
     <div class="panel">
       <h3 id="editorTitle">New Page</h3>
@@ -134,14 +148,18 @@
     </div>
   </div>
 
-  <!-- Simple Login Modal -->
+  <!-- Login Modal -->
   <div id="loginModal" class="modal"><div class="panel"><h3>Admin Login</h3>
     <div class="field"><label>Username</label><input id="loginUser" type="text" value="admin"/></div>
     <div class="field"><label>Password</label><input id="loginPass" type="password"/></div>
     <div style="display:flex;gap:8px;justify-content:flex-end"><button id="doLogin" class="btn">Login</button><button id="closeLogin" class="btn ghost">Cancel</button></div>
     </div></div>
 
-  <footer>Standalone HTML - Edit PAGES_DATA in the top of this file to add internal pages. See README for step-by-step instructions.</footer>
+  <button id="forceRefreshBtn" class="floating-reset" title="Reset local edits and reload to use pages from this file">Reset & Reload
+    <small>Apply repo changes</small>
+  </button>
+
+  <footer>Standalone HTML - Edit PAGES_DATA in the top of this file to add internal pages. Use the Reset & Reload button to force the browser to load the latest file defaults.</footer>
 
   <script>
     /*****************************************************************
@@ -159,7 +177,6 @@
     const PAGES_DATA = [
       {id: 'home', title: 'Home', type: 'html', content: '<h1>Welcome to the Architecture Library</h1><p>Browse projects in the menu.</p>', parent:'', order:0},
       {id: 'projects', title: 'Projects', type: 'html', content: '<h2>Featured Projects</h2><p>Open the gallery pages to view.</p>', parent:'', order:1},
-      {id: 'sample-url', title: 'Nimbus Browser', type: 'url', url: 'https://example.com', parent:'', order:2},
       {id: 'sample-url', title: 'External Reference', type: 'url', url: 'https://example.com', parent:'', order:2},
       {id: 'gallery1', title: 'Gallery - Modern House', type:'gallery', images:[], parent:'projects', order:0, content:'<p>Modern house project.</p>'}
     ];
@@ -271,7 +288,7 @@
       return PAGES.some(p=>p.parent===page.id && matchPage(p,q));
     }
     function renderMenuItem(p,depth,q){
-      const div = document.createElement('div');div.className='menu-item';div.style.paddingLeft=(depth*12)+'px';
+      const div = document.createElement('div');div.className='menu-item';div.style.paddingLeft=(depth*8)+'px';
       const ico = document.createElement('div');ico.className='icon';ico.innerHTML=iconFor(p.type);
       const txt = document.createElement('div');txt.innerHTML='<div style="font-weight:600">'+escapeHtml(p.title)+'</div><div class="stats">'+(p.type)+' '+(p.order?('• order '+p.order):'')+'</div>';
       div.appendChild(ico);div.appendChild(txt);
@@ -289,9 +306,9 @@
     }
 
     function iconFor(type){
-      if(type==='url') return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-width="1.5" d="M10 14l6-6"/><path stroke="currentColor" stroke-width="1.5" d="M20 13v6a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/></svg>';
-      if(type==='gallery') return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 9l3 4 2-3 5 6" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>';
-      return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 20c0-3 4-5 6-5s6 2 6 5" stroke="currentColor" stroke-width="1.5"/></svg>';
+      if(type==='url') return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-width="1.5" d="M10 14l6-6"/><path stroke="currentColor" stroke-width="1.5" d="M20 13v6a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/></svg>';
+      if(type==='gallery') return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 9l3 4 2-3 5 6" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>';
+      return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 20c0-3 4-5 6-5s6 2 6 5" stroke="currentColor" stroke-width="1.5"/></svg>';
     }
 
     // Open page
@@ -307,7 +324,7 @@
       }else if(p.type==='url'){
         const wrap = document.createElement('div');wrap.style.display='flex';wrap.style.flexDirection='column';wrap.style.gap='8px';
         const a = document.createElement('a');a.href=p.url; a.textContent = p.url; a.target='_blank';
-        const iframe = document.createElement('iframe');iframe.src = p.url;iframe.style.width='100%';iframe.style.height='500px';iframe.style.border='1px solid rgba(0,0,0,0.06)';
+        const iframe = document.createElement('iframe');iframe.src = p.url;iframe.style.width='100%';iframe.style.height='640px';iframe.style.border='1px solid rgba(15,23,42,0.06)';iframe.style.borderRadius='8px';
         wrap.appendChild(a);wrap.appendChild(iframe);card.appendChild(wrap);
       }else if(p.type==='gallery'){
         const desc = document.createElement('div');desc.innerHTML = p.content || '';
@@ -315,7 +332,7 @@
         const grid = document.createElement('div');grid.className='grid';
         const imgs = p.images||[];
         if(imgs.length===0) grid.innerHTML = '<div style="color:var(--muted)">No images uploaded yet</div>';
-        imgs.forEach(src=>{const t=document.createElement('div');t.className='thumb';t.innerHTML='<img src="'+src+'" style="width:100%;height:160px;object-fit:cover"/>';grid.appendChild(t)});
+        imgs.forEach(src=>{const t=document.createElement('div');t.className='thumb';t.innerHTML='<img src="'+src+'" style="width:100%;height:180px;object-fit:cover"/>';grid.appendChild(t)});
         card.appendChild(grid);
       }
       area.appendChild(card);
@@ -330,7 +347,7 @@
       PAGES.sort((a,b)=> (a.order||0)-(b.order||0)).forEach(p=>{
         const row = document.createElement('div');row.style.display='flex';row.style.justifyContent='space-between';row.style.alignItems='center';row.style.marginBottom='8px';
         const left = document.createElement('div');left.style.display='flex';left.style.gap='8px';left.style.alignItems='center';
-        const drag = document.createElement('span');drag.className='drag-handle';drag.textContent='☰';
+        const drag = document.createElement('span');drag.className='drag-handle';drag.textContent='☰';drag.style.cursor='grab';drag.style.padding='6px';
         const title = document.createElement('div');title.innerHTML='<strong>'+escapeHtml(p.title)+'</strong><div class="stats">id: '+p.id+' • type: '+p.type+' • parent: '+(p.parent||'—')+'</div>';
         left.appendChild(drag);left.appendChild(title);
         const right = document.createElement('div');
@@ -441,8 +458,16 @@
     // simple text search that opens first match on Enter
     searchInput.addEventListener('keydown',(e)=>{if(e.key==='Enter'){const q=searchInput.value.trim().toLowerCase();if(!q) return;const found = PAGES.find(p=> (p.title&&p.title.toLowerCase().includes(q)) || (p.content&&p.content.toLowerCase().includes(q))); if(found){openPage(found.id)} else alert('No results');}});
 
-    // export/import on page load
-    qs('#exportBtn').addEventListener('click',()=>{});
+    // Reset & Reload floating button
+    qs('#forceRefreshBtn').addEventListener('click',()=>{
+      if(confirm('Reset local edits and reload to latest pages from this file?')){
+        localStorage.removeItem(KEY_PAGES);
+        localStorage.removeItem(KEY_VIEWS);
+        localStorage.removeItem(KEY_THEME);
+        sessionStorage.removeItem(KEY_ADMIN);
+        location.reload();
+      }
+    });
 
     // initial render
     renderMenu();
@@ -451,7 +476,7 @@
     if(PAGES.length) openPage(PAGES[0].id);
 
     // instructions printed to console for editing in repository
-    console.log('INSTRUCTIONS:\n- To permanently add/edit pages in the repository, open index.html and edit the PAGES_DATA array near the top of the file.\n- Each page: {id: "unique-id", title: "Title", type: "html|url|gallery", content: "<p>html</p>", url: "https://...", images: [], parent: "parent-id", order: 0} \n- Set a secure ADMIN_PASS at the top of the file.\n- This standalone page stores runtime edits in browser localStorage. To make edits permanent across browsers, update this file in the repo.');
+    console.log('INSTRUCTIONS:\n- To permanently add/edit pages in the repository, open index.html and edit the PAGES_DATA array near the top of the file.\n- Each page: {id: "unique-id", title: "Title", type: "html|url|gallery", content: "<p>html</p>", url: "https://...", images: [], parent: "parent-id", order: 0} \n- Set a secure ADMIN_PASS at the top of the file.\n- The new Reset & Reload floating button clears local edits and forces the site to load the file defaults (PAGES_DATA) from the HTML file.');
   </script>
 </body>
 </html>
