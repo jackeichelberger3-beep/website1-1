@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Architecture Library - Standalone</title>
+  <style>
+    :root{
+      --bg:#f7f7f9;--card:#fff;--muted:#6b7280;--accent:#0ea5a4;--text:#0f172a;--header:#ffffff;
+    }
+    [data-theme="dark"]{--bg:#0b1220;--card:#071027;--muted:#9ca3af;--accent:#06b6d4;--text:#e6eef6;--header:#071027}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;background:var(--bg);color:var(--text)}
+    header{height:64px;background:var(--header);display:flex;align-items:center;gap:12px;padding:8px 16px;border-bottom:1px solid rgba(0,0,0,0.06)}
+    .logo{font-weight:700;font-size:18px}
+    .search{flex:1;display:flex;align-items:center;gap:8px}
+    .search input{width:100%;padding:8px 12px;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:transparent}
+    .controls{display:flex;gap:8px;align-items:center}
+    .btn{background:var(--accent);color:#fff;padding:8px 10px;border-radius:8px;border:none;cursor:pointer}
+    .btn.ghost{background:transparent;color:var(--text);border:1px solid rgba(0,0,0,0.08)}
+    .container{display:flex;height:calc(100vh - 64px)}
+    nav{width:260px;padding:16px;background:var(--card);border-right:1px solid rgba(0,0,0,0.04);overflow:auto}
+    main{flex:1;padding:20px;overflow:auto}
+    .menu-item{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;margin-bottom:6px;cursor:pointer}
+    .menu-item:hover{background:rgba(0,0,0,0.03)}
+    .menu-item .icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:rgba(0,0,0,0.03)}
+    .submenu{margin-left:24px;border-left:1px dashed rgba(0,0,0,0.04);padding-left:10px;margin-top:6px}
+    .page-card{background:var(--card);padding:18px;border-radius:10px;box-shadow:0 6px 16px rgba(0,0,0,0.04);}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+    .thumb{background:rgba(0,0,0,0.04);border-radius:8px;overflow:hidden}
+    /* admin modal */
+    .modal{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:none;align-items:center;justify-content:center;padding:20px}
+    .modal.open{display:flex}
+    .panel{background:var(--card);padding:18px;border-radius:10px;max-width:900px;width:100%;max-height:90vh;overflow:auto}
+    .field{margin-bottom:10px}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type=text],textarea,select{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:transparent}
+    .row{display:flex;gap:10px}
+    .col{flex:1}
+    .small{width:120px}
+    .danger{background:#ef4444}
+    .stats{font-size:13px;color:var(--muted)}
+    .drag-handle{cursor:grab;padding:6px}
+    footer{padding:12px;text-align:center;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">Architecture Library</div>
+    <div class="search"><input id="searchInput" placeholder="Search pages, project names, content..." /></div>
+    <div class="controls">
+      <button id="darkToggle" class="btn ghost">Dark</button>
+      <button id="adminBtn" class="btn">Admin</button>
+    </div>
+  </header>
+  <div class="container">
+    <nav id="sideNav">
+      <!-- Side menu rendered here -->
+      <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+        <strong>Pages</strong>
+        <button id="exportBtn" class="btn ghost small">Export</button>
+      </div>
+      <div id="menuList"></div>
+      <hr />
+      <div style="margin-top:10px;font-size:13px;color:var(--muted)">Quick tips: Use Admin to manage pages. Search finds content and titles.</div>
+    </nav>
+    <main>
+      <div id="contentArea"></div>
+    </main>
+  </div>
+
+  <div id="adminModal" class="modal" aria-hidden="true">
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2>Admin Panel</h2>
+        <div>
+          <button id="adminLogout" class="btn ghost small">Logout</button>
+          <button id="closeAdmin" class="btn small">Close</button>
+        </div>
+      </div>
+
+      <div id="adminArea">
+        <section class="page-card" style="margin-top:12px">
+          <h3>Manage Pages</h3>
+          <div style="margin-bottom:10px">
+            <button id="newPageBtn" class="btn">+ New Page</button>
+            <button id="manageMenuBtn" class="btn ghost">Manage Menu Order</button>
+          </div>
+
+          <div id="pagesList"></div>
+        </section>
+
+        <section class="page-card" style="margin-top:12px">
+          <h3>Site Stats</h3>
+          <div id="statsArea"></div>
+        </section>
+
+        <section class="page-card" style="margin-top:12px">
+          <h3>Import / Reset</h3>
+          <div class="field">
+            <label>Import JSON (pages export)</label>
+            <textarea id="importJson" rows="6" placeholder='Paste exported JSON here'></textarea>
+            <div style="margin-top:8px"><button id="importBtn" class="btn">Import</button> <button id="resetBtn" class="btn ghost danger">Reset to Demo</button></div>
+          </div>
+        </section>
+
+        <section style="margin-top:12px;font-size:13px;color:var(--muted)">
+          Admin password is set in the top of this file. Change it there before sharing. Admin actions are saved in the browser's localStorage — to make permanent edits in your repository, edit index.html directly and add pages to the "PAGES_DATA" variable (see instructions below).
+        </section>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Page Editor Modal -->
+  <div id="editorModal" class="modal">
+    <div class="panel">
+      <h3 id="editorTitle">New Page</h3>
+      <div class="field"><label>Title</label><input id="pageTitle" type="text" /></div>
+      <div class="field">
+        <label>Type</label>
+        <select id="pageType"><option value="html">HTML (internal)</option><option value="url">External URL (iframe)</option><option value="gallery">Gallery (images)</option></select>
+      </div>
+      <div class="field"><label>Parent (submenu) - optional</label><select id="pageParent"><option value="">— none —</option></select></div>
+      <div class="field"><label>Order (number)</label><input id="pageOrder" type="number" value="0" /></div>
+      <div id="fieldHtml" class="field"><label>HTML Content</label><textarea id="pageHtml" rows="8"></textarea></div>
+      <div id="fieldUrl" class="field" style="display:none"><label>URL</label><input id="pageUrl" type="text" placeholder="https://example.com"/></div>
+      <div id="fieldGallery" class="field" style="display:none"><label>Upload images</label><input id="galleryUpload" type="file" accept="image/*" multiple /></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+        <button id="savePage" class="btn">Save</button>
+        <button id="cancelEdit" class="btn ghost">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Simple Login Modal -->
+  <div id="loginModal" class="modal"><div class="panel"><h3>Admin Login</h3>
+    <div class="field"><label>Username</label><input id="loginUser" type="text" value="admin"/></div>
+    <div class="field"><label>Password</label><input id="loginPass" type="password"/></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end"><button id="doLogin" class="btn">Login</button><button id="closeLogin" class="btn ghost">Cancel</button></div>
+    </div></div>
+
+  <footer>Standalone HTML - Edit PAGES_DATA in the top of this file to add internal pages. See README for step-by-step instructions.</footer>
+
+  <script>
+    /*****************************************************************
+     * CONFIG (edit these directly in index.html to add permanent pages)
+     * - To add "internal" pages permanently, edit PAGES_DATA below.
+     * - For real hosting with server-side storage, replace localStorage
+     *   usage with API calls to your backend.
+     *****************************************************************/
+
+    // Change the ADMIN_PASS to a secure password before sharing this file.
+    const ADMIN_PASS = "admin123"; // <= change this to your desired admin password
+
+    // Demo pages data. To add permanent pages, edit this array directly in the file
+    // Format: {id, title, type: 'html'|'url'|'gallery', content, url, images:[], parent:'', order:0}
+    const PAGES_DATA = [
+      {id: 'home', title: 'Home', type: 'html', content: '<h1>Welcome to the Architecture Library</h1><p>Browse projects in the menu.</p>', parent:'', order:0},
+      {id: 'projects', title: 'Projects', type: 'html', content: '<h2>Featured Projects</h2><p>Open the gallery pages to view.</p>', parent:'', order:1},
+      {id: 'sample-url', title: 'External Reference', type: 'url', url: 'https://example.com', parent:'', order:2},
+      {id: 'gallery1', title: 'Gallery - Modern House', type:'gallery', images:[], parent:'projects', order:0, content:'<p>Modern house project.</p>'}
+    ];
+
+    /*****************************************************************
+     * End of user-editable config.
+     *****************************************************************/
+
+    // Utilities
+    const qs = sel => document.querySelector(sel);
+    const qsa = sel => Array.from(document.querySelectorAll(sel));
+
+    // LocalStorage keys
+    const KEY_PAGES = 'site_pages_v1';
+    const KEY_VIEWS = 'site_views_v1';
+    const KEY_THEME = 'site_theme_v1';
+    const KEY_ADMIN = 'site_admin_v1';
+
+    // Initial load: if no pages in storage, populate from PAGES_DATA
+    function loadPages(){
+      const raw = localStorage.getItem(KEY_PAGES);
+      if(raw){
+        try{return JSON.parse(raw);}catch(e){console.error('Invalid pages in storage',e)}
+      }
+      localStorage.setItem(KEY_PAGES, JSON.stringify(PAGES_DATA));
+      return JSON.parse(JSON.stringify(PAGES_DATA));
+    }
+
+    let PAGES = loadPages();
+    let VIEWS = JSON.parse(localStorage.getItem(KEY_VIEWS) || '{}');
+
+    // Guest assignment
+    function ensureGuest(){
+      let g = sessionStorage.getItem('guest_id');
+      if(!g){
+        g = 'guest-'+Math.floor(Math.random()*9000+1000);
+        sessionStorage.setItem('guest_id', g);
+        sessionStorage.setItem('guest_name', 'Guest');
+      }
+      return {id:g, name: sessionStorage.getItem('guest_name')};
+    }
+    const GUEST = ensureGuest();
+
+    // Theme
+    function applyTheme(t){
+      if(t==='dark') document.documentElement.setAttribute('data-theme','dark');
+      else document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem(KEY_THEME, t);
+      qs('#darkToggle').textContent = t==='dark' ? 'Light' : 'Dark';
+    }
+    const savedTheme = localStorage.getItem(KEY_THEME) || 'light';
+    applyTheme(savedTheme);
+
+    qs('#darkToggle').addEventListener('click',()=>{
+      const current = document.documentElement.getAttribute('data-theme')==='dark' ? 'dark':'light';
+      applyTheme(current==='dark'?'light':'dark');
+    });
+
+    // Search
+    const searchInput = qs('#searchInput');
+    searchInput.addEventListener('input',()=>renderMenu());
+
+    // Admin state
+    function isAdmin(){return sessionStorage.getItem(KEY_ADMIN)==='true'}
+
+    qs('#adminBtn').addEventListener('click',()=>{ if(isAdmin()) openAdmin(); else openLogin(); });
+    qs('#closeLogin').addEventListener('click',()=>closeModal('loginModal'));
+    qs('#closeAdmin').addEventListener('click',()=>closeModal('adminModal'));
+    qs('#adminLogout').addEventListener('click',()=>{sessionStorage.removeItem(KEY_ADMIN);alert('Logged out');closeModal('adminModal')});
+
+    qs('#adminModal').addEventListener('click',e=>{if(e.target.id==='adminModal') closeModal('adminModal')});
+    qs('#loginModal').addEventListener('click',e=>{if(e.target.id==='loginModal') closeModal('loginModal')});
+
+    qs('#doLogin').addEventListener('click',()=>{
+      const pass = qs('#loginPass').value||'';
+      // Very simple check - change ADMIN_PASS above
+      if(pass===ADMIN_PASS){sessionStorage.setItem(KEY_ADMIN,'true');alert('Welcome, admin');closeModal('loginModal');openAdmin();}else alert('Bad password');
+    });
+
+    function openLogin(){openModal('loginModal')}
+    function openAdmin(){renderAdmin();openModal('adminModal')}
+
+    function openModal(id){qs('#'+id).classList.add('open');qs('#'+id).setAttribute('aria-hidden','false')}
+    function closeModal(id){qs('#'+id).classList.remove('open');qs('#'+id).setAttribute('aria-hidden','true')}
+
+    // Render menu
+    function renderMenu(){
+      const list = qs('#menuList');list.innerHTML='';
+      const q = searchInput.value.trim().toLowerCase();
+      // build tree
+      const map = {};
+      PAGES.slice().sort((a,b)=> (a.parent||'').localeCompare(b.parent||'') || (a.order||0)-(b.order||0)).forEach(p=>map[p.id]=p);
+      const roots = PAGES.filter(p=>!p.parent).sort((a,b)=>(a.order||0)-(b.order||0));
+      roots.forEach(r=>{
+        if(q && !matchPage(r,q) && !hasDescendantMatch(r,q)) return;
+        const el = renderMenuItem(r,0,q);
+        list.appendChild(el);
+      });
+    }
+
+    function matchPage(p,q){
+      if(!q) return true;
+      if(p.title && p.title.toLowerCase().includes(q)) return true;
+      if(p.content && p.content.toLowerCase().includes(q)) return true;
+      if(p.url && p.url.toLowerCase().includes(q)) return true;
+      return false;
+    }
+    function hasDescendantMatch(page,q){
+      return PAGES.some(p=>p.parent===page.id && matchPage(p,q));
+    }
+    function renderMenuItem(p,depth,q){
+      const div = document.createElement('div');div.className='menu-item';div.style.paddingLeft=(depth*12)+'px';
+      const ico = document.createElement('div');ico.className='icon';ico.innerHTML=iconFor(p.type);
+      const txt = document.createElement('div');txt.innerHTML='<div style="font-weight:600">'+escapeHtml(p.title)+'</div><div class="stats">'+(p.type)+' '+(p.order?('• order '+p.order):'')+'</div>';
+      div.appendChild(ico);div.appendChild(txt);
+      div.addEventListener('click',()=>openPage(p.id));
+      // children
+      const children = PAGES.filter(x=>x.parent===p.id).sort((a,b)=>(a.order||0)-(b.order||0));
+      if(children.length){
+        const wrap = document.createElement('div');wrap.className='submenu';children.forEach(c=>{
+          if(q && !matchPage(c,q) && !hasDescendantMatch(c,q)) return;
+          wrap.appendChild(renderMenuItem(c,depth+1,q));
+        });
+        div.appendChild(wrap);
+      }
+      return div;
+    }
+
+    function iconFor(type){
+      if(type==='url') return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-width="1.5" d="M10 14l6-6"/><path stroke="currentColor" stroke-width="1.5" d="M20 13v6a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/></svg>';
+      if(type==='gallery') return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 9l3 4 2-3 5 6" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>';
+      return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 20c0-3 4-5 6-5s6 2 6 5" stroke="currentColor" stroke-width="1.5"/></svg>';
+    }
+
+    // Open page
+    function openPage(id){
+      const p = PAGES.find(x=>x.id===id);
+      if(!p) return;
+      incrementView(id);
+      const area = qs('#contentArea');area.innerHTML='';
+      const card = document.createElement('div');card.className='page-card';
+      if(p.type==='html'){
+        const div = document.createElement('div');div.innerHTML = p.content || '<em>Empty</em>';
+        card.appendChild(div);
+      }else if(p.type==='url'){
+        const wrap = document.createElement('div');wrap.style.display='flex';wrap.style.flexDirection='column';wrap.style.gap='8px';
+        const a = document.createElement('a');a.href=p.url; a.textContent = p.url; a.target='_blank';
+        const iframe = document.createElement('iframe');iframe.src = p.url;iframe.style.width='100%';iframe.style.height='500px';iframe.style.border='1px solid rgba(0,0,0,0.06)';
+        wrap.appendChild(a);wrap.appendChild(iframe);card.appendChild(wrap);
+      }else if(p.type==='gallery'){
+        const desc = document.createElement('div');desc.innerHTML = p.content || '';
+        card.appendChild(desc);
+        const grid = document.createElement('div');grid.className='grid';
+        const imgs = p.images||[];
+        if(imgs.length===0) grid.innerHTML = '<div style="color:var(--muted)">No images uploaded yet</div>';
+        imgs.forEach(src=>{const t=document.createElement('div');t.className='thumb';t.innerHTML='<img src="'+src+'" style="width:100%;height:160px;object-fit:cover"/>';grid.appendChild(t)});
+        card.appendChild(grid);
+      }
+      area.appendChild(card);
+    }
+
+    // Views
+    function incrementView(id){VIEWS[id]=(VIEWS[id]||0)+1;localStorage.setItem(KEY_VIEWS,JSON.stringify(VIEWS));renderAdminStats();}
+
+    // ADMIN: render list of pages with edit/delete
+    function renderAdmin(){
+      const list = qs('#pagesList');list.innerHTML='';
+      PAGES.sort((a,b)=> (a.order||0)-(b.order||0)).forEach(p=>{
+        const row = document.createElement('div');row.style.display='flex';row.style.justifyContent='space-between';row.style.alignItems='center';row.style.marginBottom='8px';
+        const left = document.createElement('div');left.style.display='flex';left.style.gap='8px';left.style.alignItems='center';
+        const drag = document.createElement('span');drag.className='drag-handle';drag.textContent='☰';
+        const title = document.createElement('div');title.innerHTML='<strong>'+escapeHtml(p.title)+'</strong><div class="stats">id: '+p.id+' • type: '+p.type+' • parent: '+(p.parent||'—')+'</div>';
+        left.appendChild(drag);left.appendChild(title);
+        const right = document.createElement('div');
+        const edit = document.createElement('button');edit.className='btn small';edit.textContent='Edit';edit.addEventListener('click',()=>openEditor(p.id));
+        const del = document.createElement('button');del.className='btn ghost small';del.textContent='Delete';del.addEventListener('click',()=>{if(confirm('Delete page?')){PAGES = PAGES.filter(x=>x.id!==p.id);savePages();renderAdmin();renderMenu();}});
+        right.appendChild(edit);right.appendChild(del);
+        row.appendChild(left);row.appendChild(right);
+        list.appendChild(row);
+      });
+      renderAdminStats();
+    }
+
+    function renderAdminStats(){
+      const area = qs('#statsArea');area.innerHTML='';
+      const total = document.createElement('div');total.textContent='Total pages: '+PAGES.length;area.appendChild(total);
+      const ul = document.createElement('div');ul.style.marginTop='8px';
+      PAGES.forEach(p=>{const r=document.createElement('div');r.textContent = p.title + ' — ' + (VIEWS[p.id]||0) + ' views';ul.appendChild(r)});
+      area.appendChild(ul);
+    }
+
+    // Editor
+    qs('#newPageBtn').addEventListener('click',()=>openEditor());
+    qs('#cancelEdit').addEventListener('click',()=>closeModal('editorModal'));
+    qs('#pageType').addEventListener('change',()=>{
+      const t=qs('#pageType').value;
+      qs('#fieldHtml').style.display = t==='html'?'block':'none';
+      qs('#fieldUrl').style.display = t==='url'?'block':'none';
+      qs('#fieldGallery').style.display = t==='gallery'?'block':'none';
+    });
+
+    let editingId = null;
+    function openEditor(id){
+      editingId = id || null;
+      qs('#editorTitle').textContent = id ? 'Edit Page' : 'New Page';
+      qs('#pageTitle').value = '';
+      qs('#pageType').value = 'html';qs('#pageOrder').value = 0;qs('#pageParent').innerHTML = '<option value="">— none —</option>';
+      PAGES.forEach(p=>{const opt=document.createElement('option');opt.value=p.id;opt.textContent=p.title;qs('#pageParent').appendChild(opt)});
+      if(id){const p = PAGES.find(x=>x.id===id);if(!p) return;qs('#pageTitle').value=p.title;qs('#pageType').value=p.type;qs('#pageOrder').value=p.order||0;qs('#pageParent').value=p.parent||'';qs('#pageHtml').value=p.content||'';qs('#pageUrl').value=p.url||''}
+      qs('#fieldHtml').style.display='block';qs('#fieldUrl').style.display='none';qs('#fieldGallery').style.display='none';
+      openModal('editorModal');
+    }
+
+    // save page
+    qs('#savePage').addEventListener('click',async()=>{
+      const title = qs('#pageTitle').value.trim(); if(!title){alert('Title required');return}
+      const type = qs('#pageType').value; const parent = qs('#pageParent').value||''; const order = parseInt(qs('#pageOrder').value||0,10);
+      if(editingId){
+        const p = PAGES.find(x=>x.id===editingId);p.title=title;p.type=type;p.parent=parent;p.order=order; if(type==='html') p.content = qs('#pageHtml').value; if(type==='url') p.url = qs('#pageUrl').value; if(type==='gallery'){
+          // handle upload results stored on input change
+        }
+      }else{
+        const id = title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') + '-' + Math.floor(Math.random()*900+100);
+        const p = {id, title, type, parent, order};
+        if(type==='html') p.content = qs('#pageHtml').value;
+        if(type==='url') p.url = qs('#pageUrl').value;
+        if(type==='gallery'){p.images = uploadedImgs.slice();p.content = qs('#pageHtml').value}
+        PAGES.push(p);
+      }
+      savePages();renderAdmin();renderMenu();closeModal('editorModal');
+    });
+
+    // Gallery upload handling
+    let uploadedImgs = [];
+    qs('#galleryUpload').addEventListener('change',async (e)=>{
+      const files = Array.from(e.target.files||[]);
+      for(const f of files){
+        const data = await toDataURL(f);
+        uploadedImgs.push(data);
+      }
+      alert('Uploaded '+files.length+' images. Save the page to keep them.');
+    });
+    function toDataURL(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}
+
+    // Save pages to storage
+    function savePages(){localStorage.setItem(KEY_PAGES, JSON.stringify(PAGES));}
+
+    // Export
+    qs('#exportBtn').addEventListener('click',()=>{const data=JSON.stringify(PAGES,null,2);const a=document.createElement('a');a.href='data:text/json;charset=utf-8,'+encodeURIComponent(data);a.download='pages-export.json';a.click();});
+
+    // Import
+    qs('#importBtn').addEventListener('click',()=>{try{const j=JSON.parse(qs('#importJson').value);if(!Array.isArray(j)) throw 'Not an array';PAGES=j;savePages();renderAdmin();renderMenu();alert('Imported');}catch(e){alert('Bad JSON: '+e)}});
+    qs('#resetBtn').addEventListener('click',()=>{if(confirm('Reset to demo pages?')){localStorage.removeItem(KEY_PAGES);PAGES=loadPages();renderAdmin();renderMenu();alert('Reset');}});
+
+    // Simple deletion and reordering UI
+    qs('#manageMenuBtn').addEventListener('click',()=>openManageOrder());
+    function openManageOrder(){
+      // create a simple drag-and-drop list to reorder top-level pages
+      const modal = document.createElement('div');modal.className='modal open';modal.style.zIndex=9999;modal.innerHTML='<div class="panel"><h3>Reorder Menu</h3><div id="orderList"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button id="saveOrder" class="btn">Save</button><button id="closeOrder" class="btn ghost">Close</button></div></div>';
+      document.body.appendChild(modal);
+      const list = modal.querySelector('#orderList');
+      const tops = PAGES.filter(p=>!p.parent).sort((a,b)=>(a.order||0)-(b.order||0));
+      tops.forEach(p=>{const item=document.createElement('div');item.draggable=true;item.style.padding='8px';item.style.border='1px solid rgba(0,0,0,0.06)';item.style.marginBottom='4px';item.style.background='var(--card)';item.dataset.id=p.id;item.textContent=p.title;list.appendChild(item)});
+      let dragEl=null;
+      list.addEventListener('dragstart',e=>{dragEl=e.target;});
+      list.addEventListener('dragover',e=>{e.preventDefault();const after = document.elementFromPoint(e.clientX,e.clientY);});
+      list.addEventListener('drop',e=>{e.preventDefault();const target = e.target.closest('[draggable]');if(target && dragEl && target!==dragEl){list.insertBefore(dragEl,target.nextSibling);}});
+      modal.querySelector('#closeOrder').addEventListener('click',()=>{document.body.removeChild(modal)});
+      modal.querySelector('#saveOrder').addEventListener('click',()=>{
+        const ids = Array.from(list.querySelectorAll('[draggable]')).map(x=>x.dataset.id);
+        ids.forEach((id,idx)=>{const p=PAGES.find(x=>x.id===id);if(p)p.order=idx});
+        savePages();renderMenu();renderAdmin();document.body.removeChild(modal);
+      });
+    }
+
+    // Helpers
+    function escapeHtml(s){if(!s) return ''; return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
+
+    // simple text search that opens first match on Enter
+    searchInput.addEventListener('keydown',(e)=>{if(e.key==='Enter'){const q=searchInput.value.trim().toLowerCase();if(!q) return;const found = PAGES.find(p=> (p.title&&p.title.toLowerCase().includes(q)) || (p.content&&p.content.toLowerCase().includes(q))); if(found){openPage(found.id)} else alert('No results');}});
+
+    // export/import on page load
+    qs('#exportBtn').addEventListener('click',()=>{});
+
+    // initial render
+    renderMenu();
+
+    // Open home on load
+    if(PAGES.length) openPage(PAGES[0].id);
+
+    // instructions printed to console for editing in repository
+    console.log('INSTRUCTIONS:\n- To permanently add/edit pages in the repository, open index.html and edit the PAGES_DATA array near the top of the file.\n- Each page: {id: "unique-id", title: "Title", type: "html|url|gallery", content: "<p>html</p>", url: "https://...", images: [], parent: "parent-id", order: 0} \n- Set a secure ADMIN_PASS at the top of the file.\n- This standalone page stores runtime edits in browser localStorage. To make edits permanent across browsers, update this file in the repo.');
+  </script>
+</body>
+</html>
